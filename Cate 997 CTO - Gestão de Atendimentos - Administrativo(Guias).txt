@@ -1,0 +1,34 @@
+select	
+a.nr_atendimento,
+a.nm_medico,
+--upper(abrevia_nome((a.nm_medico))) nm_medico,
+substr(obter_valor_dominio(12, a.ie_tipo_atendimento),1,40) ds_tipo_atend,
+substr(obter_nome_pf_pj (a.cd_pessoa_fisica, ''),1,60) nm_pessoa_fisica,
+substr(obter_crm_medico(a.cd_medico_resp),1,15) crm_medico,
+a.nm_usuario_atend atendente,
+to_char(a.dt_entrada, 'dd/mm/yyyy') dt_entrada,
+to_char(a.dt_entrada,'hh24:mi:ss') hr_entrada,
+to_char(a.dt_nascimento, 'dd/mm/yyyy' )dt_nascimento,
+upper(substr((a.ds_sexo),1,1)) ds_sexo,
+upper(a.ds_plano) ds_plano,
+a.nr_guia_atend guia,
+upper(a.ds_categoria) categoria,
+to_char(a.dt_validade_carteira,'dd/mm/yyyy') dt_validade_carteira,
+upper((select  vl.ds_valor_dominio_cliente from VALOR_DOMINIO vl where vl.cd_dominio = 17 and vl.ie_situacao = 'A'and a.ie_clinica = vl.vl_dominio)) ds_clinica,
+upper((select ca.ds_classificacao from CLASSIFICACAO_ATENDIMENTO ca where ca.ie_situacao = 'A' and ca.nr_sequencia = a.nr_seq_classificacao)) classificacao,
+a.cd_estabelecimento,
+a.cd_usuario_convenio,
+TASY.OBTER_IDADE_PF(a.cd_pessoa_fisica,a.dt_entrada,'A') ds_idade,
+decode(a.IE_TIPO_ATENDIMENTO, '3', 'P.S', '7', 'EXT','8', 'AMB','1', 'INT','10','C.I','11', 'MED.CAS.','12', 'Est.Min','14', 'Sin/Virt')  tipo_atendi
+from	atendimento_paciente_v  a
+where	1 = 1
+and a.dt_entrada between :dt_inicial and :dt_final
+and a.cd_estabelecimento = 3
+and ((a.ie_clinica = :cd_clinica) or ('0' = :cd_clinica))
+and ((a.nr_seq_classificacao = :nr_seq_class) or ('0' = :nr_seq_class))
+and (tasy.obter_crm_medico(a.cd_medico_resp) = :crm_med or :crm_med = '0')
+and ((a.cd_convenio = :cd_convenio) or ('0' = :cd_convenio))
+and ((a.ie_tipo_atendimento = :ie_tipo_atend) or ('0' = :ie_tipo_atend))
+and ((a.nr_atendimento = :nr_atend_p) or ('0' = :nr_atend_p))
+and  a.dt_cancelamento is null
+order by	nm_medico, a.nr_atendimento

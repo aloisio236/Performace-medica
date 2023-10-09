@@ -1,0 +1,48 @@
+select distinct a.nr_crm,
+                e.ds_codigo_prof,
+                tasy.obter_nome_estabelecimento(b.cd_estabelecimento) est,
+                upper(substr(tasy.obter_nome_medico(b.cd_medico, 'N'),
+                             1,
+                             60)) as nm_medico,
+                tasy.obter_nome_especialidade(b.cd_especialidade) esp,
+upper( tasy.obter_dia_semana(b.dt_inicial)) dia_semana,
+                b.dt_inicial_prev,
+	b.dt_final_prev,
+                b.dt_inicial,
+                b.dt_final,
+                b.qt_minuto,
+                TASY.obter_horas_minutos(b.qt_minuto) qt_hora,
+                (select d.vl_medico
+                   from tasy.PRECO_AMB      d
+                  where trunc(b.dt_inicial) between d.dt_inicio_vigencia and nvl(d.dt_final_vigencia,trunc(sysdate))
+                    and d.cd_procedimento = 10101012
+                    and d.cd_edicao_amb in (select case                    
+                                                        when b.cd_especialidade in (32,130,6,9,4,20,49,40,64,18,2,121,3,33,28,56) then 2000
+                                                                                                                     
+                                                        else 0 end from dual)
+                ) /60 valor_minuto,
+                round((((select d.vl_medico
+                   from tasy.PRECO_AMB      d
+                  where trunc(b.dt_inicial) between d.dt_inicio_vigencia and nvl(d.dt_final_vigencia,trunc(sysdate))
+                    and d.cd_procedimento = 10101012
+                    and d.cd_edicao_amb in (select case 
+                                                       when b.cd_especialidade in (6,9,4,20,49,40,64,18,2,121,3,33) then 2000                     
+                                                        else 0 end from dual)
+                )/60) * b.qt_minuto),2) vl_receber
+  from tasy.medico         a,
+       tasy.medico_plantao b,
+       tasy.pessoa_fisica  e
+ where  
+  a.cd_pessoa_fisica  = b.cd_medico
+  AND  :IE_OP in ('A')
+and :IE_REL  in ('C','T')
+
+  and ((b.cd_medico = :cd_medico) or ('0' = :cd_medico))
+and b.cd_especialidade in (6,9,4,20,49,40,64,18,2,121,3,33)
+   and (b.dt_inicial between :dt_inicial and :dt_final)
+
+   and e.cd_pessoa_fisica    = a.cd_pessoa_fisica
+   and b.cd_estabelecimento  = 3
+   and b.dt_inicial is not null
+   and b.dt_final is not null
+ order by 4,8

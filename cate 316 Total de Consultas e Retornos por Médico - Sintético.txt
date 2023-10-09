@@ -1,0 +1,19 @@
+select	substr(tasy.obter_nome_medico(a.cd_medico_resp, 'N'),1,60) as Profissional,
+        tasy.obter_valor_dominio(17,a.IE_CLINICA) ds_CLINICA  ,
+ sum(decode(a.nr_seq_classificacao,'1',1,'48',1,'6',1,0)) as Consultas,
+        sum(decode(a.nr_seq_classificacao,'8',1,'9',1,'49',1,0)) as Retornos,
+        count(1) as Pacientes
+from	tasy.atendimento_paciente_v  a    
+where	a.dt_entrada  between :dt_inicial and :dt_final
+--and   a.IE_CANCELADO = 'N'
+and a.dt_cancelamento is null
+and a.cd_estabelecimento = :cd_estabelecimento
+and	((a.cd_medico_resp = :cd_medico) or ('0' = :cd_medico))
+and	((a.ie_tipo_atendimento = :ie_tipo_atendimento) or ('9999' = :ie_tipo_atendimento))
+and  a.nr_seq_classificacao in (1,6,8,9,48,49)
+and	(a.ie_clinica in (4,6,1,17,58,86,92,96,98,240,200,190,180,170,120,100,110,250,555,7,1010,1011,1016,1012,86,1014,1018) 
+and :cd_clinica = '0' or (a.ie_clinica = :cd_clinica))
+
+group by a.cd_medico_resp,a.IE_CLINICA
+
+order by 1,2

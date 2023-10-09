@@ -1,0 +1,31 @@
+SELECT
+COUNT(t.nr_atend) nr_total_atend,
+tasy.obter_horario_wsf (AVG(DT_ENTRADA - dt_geracao_senha) * 24 * 60 * 60) SOMA_TEMPO_RECEP,
+tasy.obter_horario_wsf (AVG(fim_consulta - inicio_consulta) * 24 * 60 * 60) SOMA_TEMPO_CONSULTA,
+tasy.obter_horario_wsf (AVG(fim_consulta - dt_geracao_senha) * 24 * 60 * 60) SOMA_TEMPO_TOTAL
+
+FROM
+(
+SELECT DISTINCT
+B.NR_ATENDIMENTO nr_atend,
+a.dt_geracao_senha dt_geracao_senha,
+b.DT_ENTRADA DT_ENTRADA,
+b.DT_ATEND_MEDICO inicio_consulta,
+b.DT_ALTA fim_consulta
+
+FROM   tasy.PACIENTE_SENHA_FILA A,
+       tasy.atendimento_paciente b
+
+where B.dt_ENTRADA between :dt_inicial and :dt_final
+AND    b.nr_seq_pac_senha_fila = a.nr_sequencia
+and    B.CD_ESTABELECIMENTO = 3
+AND    ((B.nr_atendimento = :nr_atendimento) OR (:nr_atendimento = '0'))
+and    ((b.IE_CLINICA = :IE_CLINICA) or ('0' = :IE_CLINICA))
+and    (tasy.obter_crm_medico(b.cd_medico_resp) = :crm_med or :crm_med = '0')
+and b.IE_TIPO_ATENDIMENTO = 8
+and b.dt_atend_medico is not null
+and b.dt_alta is not null
+AND    A.NR_SEQ_FILA_SENHA IN (22,23,24,25,26,38,40,41,43,27,28,29,30,31,32,33,61,34,35,36,37,73,78,79,80,81,62,76,77,110,184,189,190,191,192,203,63 ,120,193,206,207,208,273,274,275,276,277,278,279,280,281,282,283,284,285,270,246,247,248,249,250,251,252,253,254,255,256,257,258,259,260,261,264,262,263,272)
+ORDER BY DT_GERACAO_SENHA, NR_ATENDIMENTO
+
+) t

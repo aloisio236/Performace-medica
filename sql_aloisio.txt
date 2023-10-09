@@ -1,0 +1,63 @@
+select  distinct  
+a.nr_atendimento,
+--a.nm_medico,
+substr(tasy.obter_nome_medico(a.cd_medico_resp, 'N'),1,60) as Profissional,
+a.cd_medico_resp profissional_p,
+--obter_valor_dominio(17,a.IE_CLINICA) ds_CLINICA  ,
+--               upper(substr(tasy.obter_nome_medico(b.cd_medico, 'N'),1,60)) as nm_medico,
+--                tasy.obter_nome_especialidade(b.cd_especialidade) esp,
+              --upper( tasy.obter_dia_semana(b.dt_inicial)) dia_semana,
+--              b.dt_inicial_prev,
+--              b.dt_final_prev,
+                to_date (b.dt_inicial)dt_inicial,
+                to_char(b.dt_inicial,'hh:mm:ss')as hr_inicial,
+                to_char(b.dt_final,'hh:mm:ss')as hr_final,                
+              -- c.dt_entrada,            
+              --b.qt_minuto,
+              --substr(tasy.),1,10) hr_inicial2,
+               substr(TASY.obter_horas_minutos(b.qt_minuto),1,10) qt_hora_trab,
+                sum(decode(a.nr_seq_classificacao,'1',1,'48',1,'6',1,0)) as Consultas,
+                sum(decode(a.nr_seq_classificacao,'8',1,'9',1,'49',1,0)) as Retornos,
+                count(1) as Pacientes
+                
+               
+  from atendimento_paciente_v  a,
+       medico_plantao b,
+       medico         c,              
+       pessoa_fisica  e
+     
+
+where    1 = 1
+and a.dt_entrada between :dt_inicial and :dt_final
+and a.cd_estabelecimento = 3
+and a.dt_cancelamento is null
+--and a.cd_pessoa_fisica = b.cd_medico
+
+--and c.cd_pessoa_fisica = a.cd_pessoa_fisica
+--and a.cd_pessoa_fisica = e.cd_medico
+
+and c.cd_pessoa_fisica = b.cd_medico
+
+and e.cd_pessoa_fisica = c.cd_pessoa_fisica
+and ((b.cd_medico = :cd_medico) or ('0' = :cd_medico))
+and b.dt_inicial  between :dt_inicial and :dt_final
+and b.dt_inicial is not null
+and b.dt_final is not null
+and a.dt_cancelamento is null
+and a.cd_estabelecimento = 3
+and    ((a.cd_medico_resp = :cd_medico) or ('0' = :cd_medico))
+--and    ((a.ie_tipo_atendimento = :ie_tipo_atendimento) or ('9999' = :ie_tipo_atendimento))
+and  a.nr_seq_classificacao in (1,6,8,9,48,49)
+and    (a.ie_clinica in (4,6,1,17,58,86,92,96,98,240,200,190,180,170,120,100,110,250,555,7,1010,1011,1016,1012,86,1014,1015,1018) and :cd_clinica = '0' or (a.ie_clinica = :cd_clinica))
+
+  
+group by b.cd_medico
+,b.cd_especialidade
+,b.dt_inicial
+,b.dt_final
+,b.qt_minuto
+,a.nr_atendimento
+,a.nm_medico
+,a.IE_CLINICA
+,a.cd_medico_resp
+order by nm_medico,dt_inicial asc
